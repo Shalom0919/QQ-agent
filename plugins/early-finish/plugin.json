@@ -1,0 +1,31 @@
+{
+  "id": "early-finish",
+  "name": "token 直接减半",
+  "version": "1.2.0",
+  "apiVersion": 1,
+  "category": "utility",
+  "description": "token 直接减半，还不改她的任何说话方式。她在一次运行里把话发出去之后，如果这一批没有遗留动作（没有工具失败、没有\"我去看看\"这类预告），就直接结束这次运行——省掉那轮只为调一次 finish 而存在的 LLM 调用。实测（同类角色、连续 96 次运行）：平均调用轮数 1.74 → 1.07，1 轮完成的比例 35% → 93%，token 消耗降约四成；最常见的那一档直接从 2 轮变 1 轮（单次减半）。它是纯调度优化：不碰提示词、不改人设、不拦发言。**1.2.0 起**：提前收尾时，那行结束说明不再是一句死话 —— 会从她这一轮的思考里抽一句\"她打算怎么说\"（纯本地、零成本，省 token 的效果不变）。**只装插件就能用，不需要改宿主**（思考是从核心的 after-response 钩子里取的）；思考本身为空时退回原来的说明。",
+  "author": "小肥鱼",
+  "entry": "index.js",
+  "enabledByDefault": true,
+  "capabilities": [
+    "reply.local-policy"
+  ],
+  "requires": [],
+  "settings": {
+    "enabled": true,
+    "dryRun": false
+  },
+  "configSchema": {
+    "enabled": {
+      "type": "boolean",
+      "label": "启用提前收尾",
+      "description": "关掉后恢复原样：每次运行都会跑满所有轮次。"
+    },
+    "dryRun": {
+      "type": "boolean",
+      "label": "试运行（只记录、不真的收尾）",
+      "description": "打开后只在日志里写\"本来会收尾\"，不影响实际流程——想先观察它会在什么时候生效，就用这个。"
+    }
+  }
+}

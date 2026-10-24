@@ -1,0 +1,167 @@
+{
+  "id": "hot-trend-tracker",
+  "name": "热梗事件收集",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "category": "knowledge",
+  "description": "每天定时（默认 6:00）自己去网上抓一次热梗和热点事件，压缩成小卡片存进本地知识库，让机器人知道群里最近在聊什么。纯后台抓取、不花 token；配合同名技能 hot-trends 供机器人随时查阅。卡片有保鲜期（默认 7 天），过期自动删除；也可以一键清空或卸载，用完即走。默认从贴吧热议和 B 站热门两路抓取（都带简介，且实测稳定）；百度热搜默认关闭，因为它风控较凶、又只有标题。",
+  "author": "本机定制",
+  "entry": "index.js",
+  "permissions": [],
+  "enabledByDefault": true,
+  "capabilities": ["knowledge.hot-trends"],
+  "requires": [],
+  "settings": {
+    "enabled": true,
+    "collectHour": 6,
+    "catchUpOnStart": true,
+    "checkIntervalMin": 15,
+    "sourceBaidu": false,
+    "sourceTieba": true,
+    "sourceBilibili": true,
+    "perSourceLimit": 20,
+    "keepDays": 7,
+    "maxTopics": 300,
+    "minDescriptionChars": 8,
+    "injectBrief": true,
+    "triggerWords": "热搜,热梗,什么梗,最近火,最近流行,最近的梗,网上都在说,新鲜事,新梗,吃瓜,出什么事了,发生什么了,out了",
+    "maxInjectChars": 480,
+    "hookCount": 5,
+    "briefDescChars": 40,
+    "notifyChatKey": "",
+    "maxSourceFailures": 5
+  },
+  "configSchema": {
+    "enabled": {
+      "type": "boolean",
+      "label": "启用每日自动收集",
+      "description": "关掉后不再定时抓取，已有的卡片保留（机器人仍可查阅）。想彻底不用请看下面的「保鲜期」或直接卸载。"
+    },
+    "collectHour": {
+      "type": "number",
+      "label": "每天几点抓取",
+      "description": "按北京时间算的整点，0~23。默认 6 点：趁群里没人说话的时候把当天的热点备好。",
+      "min": 0,
+      "max": 23,
+      "step": 1
+    },
+    "catchUpOnStart": {
+      "type": "boolean",
+      "label": "启动时补抓一次",
+      "description": "开机/重启后如果发现今天还没抓过（或已经隔了一天以上），立刻补一次。建议开。"
+    },
+    "checkIntervalMin": {
+      "type": "number",
+      "label": "检查间隔（分钟）",
+      "description": "每隔多久检查一次「是不是到点了」。只做时间比较，不联网、不花 token，默认 15 分钟。",
+      "min": 1,
+      "max": 240,
+      "step": 1
+    },
+    "sourceBaidu": {
+      "type": "boolean",
+      "label": "抓百度热搜（默认关闭）",
+      "description": "覆盖面最广（时政/社会/娱乐都有），但**风控最凶**：本机实测经常返回一个 190KB 的验证页而不是数据，而且它只有标题、没有简介。默认关闭，让贴吧+B站这两路稳定来源工作。想要更广的覆盖可以打开 —— 打不开也不影响其它来源，偶尔失败会自动重试一次、连续失败会自动跳过。"
+    },
+    "sourceTieba": {
+      "type": "boolean",
+      "label": "抓贴吧热议",
+      "description": "百度贴吧热议榜：带一段人工写的简介，最适合理解「这个梗到底是什么」，是本站最有价值的一路。"
+    },
+    "sourceBilibili": {
+      "type": "boolean",
+      "label": "抓 B 站热门",
+      "description": "B 站综合热门视频：网梗的主要发源地之一，带 UP 主和视频简介。"
+    },
+    "perSourceLimit": {
+      "type": "number",
+      "label": "每个来源最多取几条",
+      "description": "默认 20。调大可覆盖更多话题，代价是知识库文件更大、机器人查阅时更占 token。",
+      "min": 5,
+      "max": 50,
+      "step": 5
+    },
+    "keepDays": {
+      "type": "number",
+      "label": "卡片保鲜期（天）",
+      "description": "超过这个天数的卡片自动删除。默认 7 天 —— 热梗过一周基本就没人提了，留着只会占地方、费 token。填 1 = 只留当天的。",
+      "min": 1,
+      "max": 60,
+      "step": 1
+    },
+    "maxTopics": {
+      "type": "number",
+      "label": "知识库最多存几条",
+      "description": "兜底上限，超过就按「新鲜度 + 热度」淘汰最差的。默认 300 条，约 60KB。",
+      "min": 20,
+      "max": 2000,
+      "step": 20
+    },
+    "minDescriptionChars": {
+      "type": "number",
+      "label": "简介最短字数",
+      "description": "去重时两条撞名话题留哪条：简介长于这个字数的优先。默认 8 字。",
+      "min": 0,
+      "max": 100,
+      "step": 1
+    },
+    "injectBrief": {
+      "type": "boolean",
+      "label": "命中关键词时先递小抄",
+      "description": "群里出现「什么梗」「最近火」这类词时，先把知识库里最新的一小把热点塞给机器人看一眼（默认最多 480 字），它就不用当场联网搜了 —— 这是这套东西省 token 的主要来源。关掉则只保留工具查询。"
+    },
+    "triggerWords": {
+      "type": "string",
+      "label": "触发递小抄的关键词",
+      "description": "出现其中任意一个词就把小抄递过去。多个词用英文逗号分隔。",
+      "multiline": true
+    },
+    "maxInjectChars": {
+      "type": "number",
+      "label": "小抄长度上限（字符）",
+      "description": "默认 480。这一段每轮命中都会进模型上下文，调大等于每轮多花 token。",
+      "min": 100,
+      "max": 3000,
+      "step": 20
+    },
+    "hookCount": {
+      "type": "number",
+      "label": "小抄最多带几条",
+      "description": "默认 5 条。5 条足够让机器人知道「现在网上在聊什么」，再多它也不会全用上，只是白花 token。",
+      "min": 1,
+      "max": 12,
+      "step": 1
+    },
+    "briefDescChars": {
+      "type": "number",
+      "label": "小抄里每条简介最多几字",
+      "description": "默认 40 字。小抄只要能认出「这是哪个梗」就够了；想让它看完整简介，机器人会自己用 hot_brief 工具去查（那条路不截断）。填 0 = 小抄只要标题。",
+      "min": 0,
+      "max": 200,
+      "step": 10
+    },
+    "notifyChatKey": {
+      "type": "string",
+      "label": "抓完通知哪个会话（可留空）",
+      "description": "填会话键就会在抓取完成后主动发一条纯文字汇报（如 group:123456 或 private:10001）。留空 = 安静干活，不打扰任何人。注意：这是机器人主动发言，会真的发消息出去。"
+    },
+    "maxSourceFailures": {
+      "type": "number",
+      "label": "连续失败多少次自动停用该来源",
+      "description": "某个榜单接口改版或长期不通时，连续失败这么多次就自动跳过它，避免每次抓取都白等一遍超时。默认 5 次。",
+      "min": 1,
+      "max": 50,
+      "step": 1
+    }
+  },
+  "prompt": {
+    "sections": [
+      {
+        "id": "hot-trend-tracker-note",
+        "title": "热梗知识库（后台自动更新）",
+        "priority": 45,
+        "content": "系统每天会自己抓一次网上的热梗和热点，存在本地知识库里。要聊最近的热搜、新梗、群里在说的事时，先用 hot_brief 查本地知识库（快、免费），不够再用 web_search 补。查到的只是标题和简介，**别当成全部事实照搬**：拿不准的细节要么联网核实，要么就不提，不要顺着标题编内容。别人只是闲聊、或话题跟热点无关时，不要主动蹦热搜，那样很像播报机器人。"
+      }
+    ]
+  }
+}

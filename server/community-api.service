@@ -1,0 +1,13 @@
+[Unit]
+Description=QQ Agent Community API
+After=network.target
+
+[Service]
+WorkingDirectory=/www/wwwroot/kondius-blog-static/backend
+Environment=QQ_AGENT_COMMUNITY_KEY=CHANGE_ME_BEFORE_START
+ExecStart=/root/miniconda3/bin/gunicorn -w 2 -b 127.0.0.1:8921 --timeout 60 community_app:app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

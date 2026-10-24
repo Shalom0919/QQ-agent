@@ -1,0 +1,86 @@
+{
+  "id": "whale-memes",
+  "name": "梗鲸表情包",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "category": "media",
+  "description": "让机器人从「梗鲸」（aigengtu.com）挑一张贴切的表情包发到当前会话：既能在自己这句话有情绪时主动配一张，也能由群友点名要图（可按关键词或角色挑）。图库是纯静态 JSON，免 Key、免配置，收录 1429 张蓝色大肥鱼（DeepSeek 鲸娘）与各路 AI 娘化梗图。发送前会先把原图下载下来校验真伪（这个图床在图不存在时返回的是 HTML 错误页，不校验就会发出裂图），并且同一个会话里不会重发同一张。",
+  "author": "本地自建",
+  "enabledByDefault": true,
+  "permissions": ["web_fetch"],
+  "settings": {
+    "enabled": true,
+    "proactive": true,
+    "character": "auto",
+    "maxCount": 1,
+    "maxPerHour": 6,
+    "maxPerDay": 30,
+    "dedupe": true,
+    "preferOriginal": true,
+    "minShortSide": 200,
+    "refreshHours": 12
+  },
+  "configSchema": {
+    "enabled": {
+      "type": "boolean",
+      "label": "启用梗鲸表情包",
+      "description": "关掉之后这个技能注册的发送/翻图库工具会一起失效，机器人也不会再主动配图。"
+    },
+    "proactive": {
+      "type": "boolean",
+      "label": "允许主动配图",
+      "description": "开着：机器人自己那句话有情绪时，会主动配一张贴语气图。关掉后只有群友明确要图时才发。"
+    },
+    "character": {
+      "type": "enum",
+      "label": "默认角色",
+      "description": "机器人自己主动配图时优先从哪个角色里挑。auto = 按语气自己决定，不限定角色。（豆大妈 / Kimi娘 / 通义千问娘 / 智谱清言娘 / Gemini娘 / Grok娘 目前图库为空，选了会自动回到 auto。）",
+      "values": ["auto", "DeepSeek娘", "AI娘化", "Claude娘", "GPT娘"]
+    },
+    "maxCount": {
+      "type": "number",
+      "label": "一次最多发几张",
+      "description": "上限保护，防止刷屏。1~3，默认 1。"
+    },
+    "maxPerHour": {
+      "type": "number",
+      "label": "每个会话每小时最多几张",
+      "description": "按会话单独计算，默认 6。超过了要等到下一个小时。"
+    },
+    "maxPerDay": {
+      "type": "number",
+      "label": "每个会话每天最多几张",
+      "description": "按会话单独计算，默认 30。"
+    },
+    "dedupe": {
+      "type": "boolean",
+      "label": "同一会话不重发同一张",
+      "description": "开着（推荐）：同一个群/好友里发过的图不会重复发，直到图库里的可选项用完。关掉则每次都可能发到重复的。"
+    },
+    "preferOriginal": {
+      "type": "boolean",
+      "label": "优先发原图",
+      "description": "开着：发站内原图（更清晰，单张约 100KB~1MB）。关掉：发站点缩略图，省流量、发得更快，但清晰度低一些。"
+    },
+    "minShortSide": {
+      "type": "number",
+      "label": "清晰度下限（短边像素）",
+      "description": "优先挑短边不小于该值的图（默认 200）。都不达标时会放宽，不会因此发不出图；填 0 = 不限制。"
+    },
+    "refreshHours": {
+      "type": "number",
+      "label": "图库索引缓存时长（小时）",
+      "description": "图库索引会缓存到本地，默认 12 小时刷新一次，避免每次发图都拉一遍（索引约 530KB）。设 0 = 每次都用缓存不主动刷新。"
+    }
+  },
+  "prompt": {
+    "sections": [
+      {
+        "id": "whale-memes-playbook",
+        "title": "梗鲸表情包（挑一张配当下气氛）",
+        "priority": 44,
+        "content": "你有一个现成的表情包图库叫「梗鲸」，里面是蓝色大肥鱼（DeepSeek 鲸娘）和各路 AI 娘化的梗图，可以直接发到群里。\n\n什么时候该发，只有两种：\n1) **主动配图**：你自己这句话有明显情绪、配一张正好替你把话说完（吐槽、委屈、得意、无语、被催、赶工期…），就调 `whale-memes__send_meme`，keyword 填你这句话的**语气词**（如「委屈」「无语」「得意」「气鼓鼓」）。注意分寸：不是每条都配 —— 对方在认真问事、话题正紧、你刚发过图、或者你自己都觉得没合适的，就别硬凑，不发完全正常。\n2) **群友点图**：有人直接要图（「来张表情包」「发个表情」「点一张」「来张气鼓鼓的」「有没有 XX 的图」），同样调 `whale-memes__send_meme`，keyword 从对方原话里提炼。如果对方想先看看再挑，先用 `whale-memes__list_memes` 列出候选（带编号和梗名），对方点了哪张，再用 `whale-memes__send_meme` 把 `pick` 填成那张的编号发出去。\n\n角色筛选：`character` 可以填 `DeepSeek娘` / `AI娘化` / `Claude娘` / `GPT娘`；不填就按最贴语气的挑。一次最多 1~2 张，别刷屏。\n\n图发出去之后**不要在回复里描述或复述图里画的是什么**，一两句话带过就行。别自己编图 —— 图库有就发，没有（工具报错）就换个词再试一次，还是不行就直说「图库这会儿连不上」，不要假装发了。"
+      }
+    ]
+  }
+}

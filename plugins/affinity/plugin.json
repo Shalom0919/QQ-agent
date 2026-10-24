@@ -1,0 +1,137 @@
+{
+  "id": "affinity",
+  "name": "群友好感度",
+  "version": "1.1.0",
+  "apiVersion": 1,
+  "category": "message",
+  "description": "自动记住每个群友的发言并累积好感度，等级从「陌生」一路升到「挚友」；指定的主人 QQ 号好感度恒为满级，并可在群里直接用自然语言调整本插件的设定。",
+  "author": "QQ Agent 用户",
+  "enabledByDefault": true,
+  "capabilities": [],
+  "requires": [],
+  "settings": {
+    "perMessage": 1,
+    "atBotBonus": 3,
+    "replyBonus": 2,
+    "dailyCap": 20,
+    "decayAfterDays": 7,
+    "decayPerDay": 1,
+    "scanLimit": 200,
+    "topN": 10,
+    "announceLevelUp": true,
+    "allowReset": false,
+    "botQq": "",
+    "ownerQq": "",
+    "ownerScore": 9999,
+    "levelThresholds": "50,200,500,1000"
+  },
+  "configSchema": {
+    "perMessage": {
+      "type": "number",
+      "label": "每条发言加分",
+      "description": "群友每发一条消息加多少分。默认 1，设 0 可关闭发言加分。",
+      "min": 0,
+      "max": 20,
+      "step": 1
+    },
+    "atBotBonus": {
+      "type": "number",
+      "label": "@机器人额外加分",
+      "description": "消息里 @ 了机器人时额外加的分。默认 3。",
+      "min": 0,
+      "max": 50,
+      "step": 1
+    },
+    "replyBonus": {
+      "type": "number",
+      "label": "接话额外加分",
+      "description": "机器人刚说完话、紧接着有人接话（引用回复或紧跟发言）时额外加的分。默认 2。",
+      "min": 0,
+      "max": 50,
+      "step": 1
+    },
+    "dailyCap": {
+      "type": "number",
+      "label": "每人每天加分上限",
+      "description": "同一个人在一天内最多能加多少分，防刷屏刷分。默认 20。",
+      "min": 1,
+      "max": 500,
+      "step": 1
+    },
+    "decayAfterDays": {
+      "type": "number",
+      "label": "多少天不发言开始衰减",
+      "description": "连续多少天没发言后开始扣分。默认 7。",
+      "min": 0,
+      "max": 365,
+      "step": 1
+    },
+    "decayPerDay": {
+      "type": "number",
+      "label": "每天衰减多少分",
+      "description": "超过上面的天数后，每过一天扣多少分（不会扣到负数）。默认 1，设 0 关闭衰减。",
+      "min": 0,
+      "max": 50,
+      "step": 1
+    },
+    "scanLimit": {
+      "type": "number",
+      "label": "每次补扫的消息条数",
+      "description": "机器人被触发时，回头补扫多少条聊天记录来加分（只会补最近 24 小时内的）。默认 200。",
+      "min": 20,
+      "max": 1000,
+      "step": 10
+    },
+    "topN": {
+      "type": "number",
+      "label": "排行榜默认人数",
+      "description": "查排行榜时默认列出前几名。默认 10。",
+      "min": 1,
+      "max": 50,
+      "step": 1
+    },
+    "announceLevelUp": {
+      "type": "boolean",
+      "label": "升级时播报",
+      "description": "有人好感度升级时，在群里提一句。关闭后只在自己查询时显示。"
+    },
+    "allowReset": {
+      "type": "boolean",
+      "label": "允许任何人重置好感度",
+      "description": "关闭时只有主人 QQ 号能重置（推荐）。开启后群里任何人都能要求清空好感度。"
+    },
+    "botQq": {
+      "type": "string",
+      "label": "机器人自己的 QQ 号",
+      "description": "选填。用于识别「谁 @ 了机器人」。留空则自动从消息记录里学习，一般不用填。"
+    },
+    "ownerQq": {
+      "type": "string",
+      "label": "主人 QQ 号",
+      "description": "这个 QQ 号的好感度恒为满级（不参与加分和衰减），且只有 TA 能在群里用自然语言调整本插件的设定、以及重置任何人的好感度。留多个用英文逗号分隔。留空表示不设主人。"
+    },
+    "ownerScore": {
+      "type": "number",
+      "label": "主人的好感度分数",
+      "description": "主人显示的固定分数，需高于最高等级门槛才会显示为最高级。默认 9999。",
+      "min": 0,
+      "max": 999999,
+      "step": 1
+    },
+    "levelThresholds": {
+      "type": "string",
+      "label": "等级门槛",
+      "description": "从 Lv.2 到 Lv.5 的分数门槛，用英文逗号分隔的 4 个递增数字。默认 50,200,500,1000（对应 眼熟/熟人/老友/挚友）。改错格式会自动回退到默认值。"
+    }
+  },
+  "prompt": {
+    "sections": [
+      {
+        "id": "affinity-note",
+        "title": "群友好感度",
+        "priority": 35,
+        "content": "系统会自动记录每个群友的好感度：发言加分、@你加分、长期不发言缓慢衰减，等级依次是 陌生 / 眼熟 / 熟人 / 老友 / 挚友。当有人问「好感度」「我和你多熟」「好感度排行」「谁跟机器人最熟」这类问题时，调用 affinity 的 check 或 rank 工具查真实数据，绝对不要自己编数字或凭印象估。工具返回的是资料，请用你自己的话自然地说出来，可以带上一点情绪（关系好的可以更亲昵）。主人 QQ 号的好感度恒为满级，这是设定，不用觉得奇怪。只有主人能调整本插件的设定：当主人说「把每条加分改成 2」「关掉衰减」「看看现在的好感度设定」这类话时，调用 tune 工具；非主人提出这类要求时不要调用，直接说明只有主人能改。"
+      }
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "chat-digest",
+  "name": "群聊总结卡片",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "category": "utility",
+  "description": "把群里最近一段聊天记录总结成一张长图：调皮提词 + 精选金句 + 发言最多的人 MBTI + AI 自己的评语，渲染成图片发回群里。",
+  "author": "QQ Agent 用户定制",
+  "enabledByDefault": true,
+  "permissions": [],
+  "settings": {
+    "backgroundPath": "C:\\Users\\liuhm\\Pictures\\shouanren.jpg",
+    "defaultCount": 200,
+    "autoSend": true,
+    "cardTitle": "群聊总结",
+    "debugShowWindow": false
+  },
+  "configSchema": {
+    "backgroundPath": {
+      "type": "string",
+      "label": "卡片背景图",
+      "description": "图片文件的完整路径（建议 jpg/png）。找不到时自动退化成深色渐变背景，不会报错。默认 C:\\Users\\liuhm\\Pictures\\shouanren.jpg"
+    },
+    "defaultCount": {
+      "type": "number",
+      "label": "默认总结条数",
+      "description": "群友没说条数时默认总结最近多少条聊天记录，20~2000，默认 200。",
+      "min": 20,
+      "max": 2000
+    },
+    "autoSend": {
+      "type": "boolean",
+      "label": "渲染后自动发到群里",
+      "description": "开启：卡片渲染好直接发到当前会话。关闭：只把结果告诉机器人，由机器人自己决定发不发。"
+    },
+    "cardTitle": {
+      "type": "string",
+      "label": "卡片标题",
+      "description": "图片顶部的大标题，默认「群聊总结」。"
+    },
+    "debugShowWindow": {
+      "type": "boolean",
+      "label": "调试：渲染时显示窗口",
+      "description": "平时保持关闭。开启后渲染卡片的瞬间会弹出一个窗口（用于排查图片渲染失败），排完记得关掉。"
+    }
+  },
+  "prompt": {
+    "sections": [
+      {
+        "id": "chat-digest-note",
+        "title": "群聊总结卡片",
+        "priority": 36,
+        "content": "群友说「总结一下聊天记录 / 来个群聊总结 / 今天群里聊了啥 / 出个总结图」时，用 chat_digest 工具，别自己凭空写总结。流程是两步，必须都做完：第一步 mode=read 读回聊天记录；第二步按记录写好内容，mode=compose 把成品传回去渲染成图片。第二步不调，群友就永远看不到图。总结要调皮、嘴碎、有网感，不许写成会议纪要；金句必须是记录里的原话。"
+      }
+    ]
+  }
+}
